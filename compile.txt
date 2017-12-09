@@ -1,0 +1,2 @@
+clang++ screen_info.mm -framework Foundation -framework AppKit  -o screen_info
+
