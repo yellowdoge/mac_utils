@@ -155,16 +155,16 @@ int main(int argc, char* argv[]) {
   glReadPixels(0, 0, px_width, px_height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
   printf("glReadPixels: %d\n", glGetError());
 
-  for (int y = 0; y < 10; ++y) {
-    for (int x = 0; x < 10; ++x) {
+  for (int y = 0; y < px_height; ++y) {
+    for (int x = 0; x < px_width; ++x) {
       const int pixel_index = y * stride + x * 4;
-      printf("0x%x 0x%x 0x%x 0x%x -", pixels[pixel_index],
-             pixels[pixel_index + 1], pixels[pixel_index + 2],
-             pixels[pixel_index + 3]);
+      assert(pixels[pixel_index] == color[0]);
+      assert(pixels[pixel_index + 1] == color[1]);
+      assert(pixels[pixel_index + 2] == color[2]);
+      assert(pixels[pixel_index + 3] == color[3]);
     }
-    printf("\n");
   }
-
+  printf("Success: all pixels are correctly read back\n");
 
 /*
   // Generate and bind a FrameBuffer, render to texture type.
