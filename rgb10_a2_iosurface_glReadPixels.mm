@@ -7,8 +7,9 @@
 #import  <Cocoa/Cocoa.h>
 #import <QuartzCore/QuartzCore.h>
 #include <OpenGL/OpenGL.h>
-#include <OpenGL/GLU.h>
+//#include <OpenGL/GLU.h>
 #include <OpenGL/GLext.h>
+#include <OpenGL/gl3.h>
 
 
 void* io_surface_base_addr = NULL;
@@ -58,6 +59,7 @@ int main(int argc, char* argv[]) {
 
   [view setWantsLayer:YES];
 
+  printf("Using [%s]\n", glGetString(GL_VENDOR));
 
   // Create an IOSurface.
   const unsigned ioPixelFormat = 'R10k';
@@ -215,6 +217,13 @@ int main(int argc, char* argv[]) {
           gl_Position = vec4(a_position.x, a_position.y, 0.0, 1.0);\n\
           v_texCoord = (a_position + vec2(1.0, 1.0)) * 0.5;\n\
         }"};
+    //static const char* vertex_shader_code[] = {
+    //  "#version 330\n\
+    //   layout(location = 0) in vec4 in_position;\n\
+    //   void main()\n\
+    //   {\n\
+    //     gl_Position = in_position;\n\
+    //   }"};
 
     GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex_shader, 1, vertex_shader_code, nullptr);
@@ -234,22 +243,30 @@ int main(int argc, char* argv[]) {
     }
 
     //////////////////////////////////////////////////////////////////////////////
-    std::string fragment_shader_code =
-        "#version 150\n"
-        "#define SamplerType sampler2DRect\n"
-        "#define TextureLookup texture\n"
-        "#define TextureScale vec2(256.000000, 256.000000)\n"
-        "uniform SamplerType a_texture;\n"
-        "in vec2 v_texCoord;\n"
-        "out vec4 my_FragData;\n"
-        "void main() {\n"
-        "  my_FragData = TextureLookup(a_texture, v_texCoord * TextureScale);\n"
-        "}";
-    const GLchar *fragment_shader_code_src =
-        reinterpret_cast<const GLchar *>(fragment_shader_code.c_str());
+    static const char* fragment_shader_code[] = {
+        "#version 150\n\
+         #define SamplerType sampler2DRect\n\
+         #define TextureLookup texture\n\
+         #define TextureScale vec2(256.000000, 256.000000)\n\
+         uniform SamplerType a_texture;\n\
+         in vec2 v_texCoord;\n\
+         out vec4 my_FragData;\n\
+         void main() {\n\
+           my_FragData = TextureLookup(a_texture, v_texCoord * TextureScale);\n\
+         }"};
+    //static const char* fragment_shader_code[] = {
+    //    "#version 330\n\
+    //     uniform sampler2D tex;\n\
+    //     uniform vec2 tex_size;\n\
+    //     layout(location = 0) out vec4 out_color;\n\
+    //     void main()\n\
+    //     {\n\
+    //         vec4 in_color = texture(tex, gl_FragCoord.xy / tex_size);\n\
+    //         out_color = in_color;\n\
+    //     }"};
 
     GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader, 1, &fragment_shader_code_src, nullptr);
+    glShaderSource(fragment_shader, 1, fragment_shader_code, nullptr);
     glCompileShader(fragment_shader);
 
     value = 0;
@@ -280,18 +297,20 @@ int main(int argc, char* argv[]) {
       glDeleteProgram(program);
       assert(false);
     }
-
     glUseProgram(program);
 
     GLint sampler_location = glGetUniformLocation(program, "a_texture");
     assert(sampler_location != -1);
     glUniform1i(sampler_location, 0);
 
-    GLuint vertex_buffer = 0;
-    glGenBuffersARB(1, &vertex_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    printf("glBindBuffer: %d\n", glGetError());
 
+    GLuint vertex_array;
+    glGenVertexArrays(1, &vertex_array);
+    glBindVertexArray(vertex_array);
+
+    GLuint vertex_buffer = 0;
+    glGenBuffers(1, &vertex_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
     GLfloat quad[] = {-1.f, -1.f,
                        1.f, -1.f,
                       -1.f,  1.f,
@@ -299,10 +318,9 @@ int main(int argc, char* argv[]) {
     glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
     printf("glBufferData: %d\n", glGetError());
 
-    glActiveTexture(gl_texture);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 2, NULL);
+    printf("glVertexAttribPointer: %d\n", glGetError());
 
-    //glEnableClientState(GL_VERTEX_ARRAY);
-    //printf("glEnableClientState: %d\n", glGetError());
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     printf("glDrawArrays: %d\n", glGetError());
 
@@ -310,13 +328,15 @@ int main(int argc, char* argv[]) {
     printf("glReadPixels: %d\n", glGetError());
 
 
-    for (int y = 0; y < px_height; ++y) {
-      for (int x = 0; x < px_width; ++x) {
+    for (int y = 0; y < 10; ++y) {
+      for (int x = 0; x < 10; ++x) {
         const int pixel_index = y * stride + x * 4;
-        assert(pixels[pixel_index] == color[0]);
-        assert(pixels[pixel_index + 1] == color[1]);
-        assert(pixels[pixel_index + 2] == color[2]);
-        assert(pixels[pixel_index + 3] == color[3]);
+        printf("0x%x 0x%x 0x%x 0x%x-", pixels[pixel_index], pixels[pixel_index+1],
+          pixels[pixel_index+2], pixels[pixel_index+3]);
+        //assert(pixels[pixel_index] == color[0]);
+        //assert(pixels[pixel_index + 1] == color[1]);
+        //assert(pixels[pixel_index + 2] == color[2]);
+        //assert(pixels[pixel_index + 3] == color[3]);
       }
     }
     printf("Success: all pixels are correctly read back\n");
