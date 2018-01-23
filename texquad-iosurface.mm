@@ -1,5 +1,6 @@
 // Compile with:
-// clang++ texquad-calayer.mm -framework QuartzCore -framework Cocoa -framework OpenGL -o texquad-calayer
+// clang++ texquad-iosurface.mm -framework AppKit -framework OpenGL -framework IOSurface -framework CoreVideo -framework QuartzCore -o texquad-iosurface
+//
 #import  <Cocoa/Cocoa.h>
 #import <QuartzCore/QuartzCore.h>
 #include <OpenGL/OpenGL.h>
@@ -35,9 +36,10 @@ MainView* main_view = nil;
 CALayer* main_layer = nil;
 CVDisplayLinkRef g_display_link = NULL;
 
-static CVReturn DisplayLinkCallback(
-    CVDisplayLinkRef displayLink, const CVTimeStamp* now, const CVTimeStamp* outputTime,
-    CVOptionFlags flagsIn, CVOptionFlags* flagsOut, void* displayLinkContext) {
+static CVReturn
+DisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
+                    const CVTimeStamp *outputTime, CVOptionFlags flagsIn,
+                    CVOptionFlags *flagsOut, void *displayLinkContext) {
   [main_view performSelectorOnMainThread:@selector(displayLinkCallback)
                             withObject:nil
                          waitUntilDone:NO];
@@ -131,6 +133,26 @@ int main(int argc, char* argv[]) {
     printf("io_surface: %p\n", io_surface);
   }
 
+  {
+
+    // Map the IOSurface, write some values.
+    uint8_t* data = reinterpret_cast<uint8_t*>(
+        IOSurfaceGetBaseAddressOfPlane(io_surface, 0 /* planeIndex */));
+    assert(data);
+
+    const uint8_t color[] = {0x30, 0x40, 0x10, 0x00};
+    const size_t stride = IOSurfaceGetBytesPerRowOfPlane(io_surface, 0);
+    for (int y = 0; y < px_height; ++y) {
+      for (int x = 0; x < px_width; ++x) {
+        *reinterpret_cast<uint32_t*>(&data[y * stride + x * 4]) =
+            0x3 << 30 |  // Alpha channel is unused
+            ((color[0] << 2) | (color[0] >> 6)) << 20 |  // R
+            ((color[1] << 2) | (color[1] >> 6)) << 10 |  // G
+            ((color[2] << 2) | (color[2] >> 6));         // B
+      }
+    }
+  }
+
   // Create a GL context.
   {
     CGLPixelFormatAttribute attribs[] = {static_cast<CGLPixelFormatAttribute>(0)};
@@ -152,18 +174,19 @@ int main(int argc, char* argv[]) {
         px_width,
         px_height,
         GL_BGRA,
-        GL_UNSIGNED_INT_2_10_10_10_REV, //GL_UNSIGNED_INT_8_8_8_8_REV,  //GL_UNSIGNED_INT_2_10_10_10_REV,
+        GL_UNSIGNED_INT_2_10_10_10_REV,
         io_surface,
         0 /* plane */);
     printf("CGLTexImageIOSurface2D %d\n", cgl_error);
 
     glGenFramebuffers(1, &gl_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, gl_fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_RECTANGLE_ARB, gl_texture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                           GL_TEXTURE_RECTANGLE_ARB, gl_texture, 0);
     printf("FBO complete: %d\n", glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 
-    glClearColor(0.5, 0.5, 0.5, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
+    //glClearColor(0.5, 0.5, 0.5, 1);
+    //glClear(GL_COLOR_BUFFER_BIT);
     glFlush();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     CGLSetCurrentContext(NULL);
@@ -179,7 +202,7 @@ int main(int argc, char* argv[]) {
 
   [view addSubview:main_view];
 
-  DisplayLinkInit();
+  //DisplayLinkInit();
 
   [NSApp activateIgnoringOtherApps:YES];
   [NSApp run];
