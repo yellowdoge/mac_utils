@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
   printf("cgl_context: %p\n", cgl_context);
   CGLSetCurrentContext(cgl_context);
 
-  printf("Using [%s]\n", glGetString(GL_VENDOR));
+  printf("Using [%s - %s]\n", glGetString(GL_VENDOR), glGetString(GL_RENDERER));
 
   // Bind the |io_surface| to a texture.
   glGenTextures(1, &gl_texture);
