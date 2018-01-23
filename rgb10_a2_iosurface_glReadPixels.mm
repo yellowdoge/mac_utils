@@ -59,8 +59,6 @@ int main(int argc, char* argv[]) {
 
   [view setWantsLayer:YES];
 
-  printf("Using [%s]\n", glGetString(GL_VENDOR));
-
   // Create an IOSurface.
   const unsigned ioPixelFormat = 'R10k';
   const unsigned bytesPerElement = 4;
@@ -113,6 +111,8 @@ int main(int argc, char* argv[]) {
   CGLCreateContext(cgl_pixel_format, NULL, &cgl_context);
   printf("cgl_context: %p\n", cgl_context);
   CGLSetCurrentContext(cgl_context);
+
+  printf("Using [%s]\n", glGetString(GL_VENDOR));
 
   // Bind the |io_surface| to a texture.
   glGenTextures(1, &gl_texture);
