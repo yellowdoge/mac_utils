@@ -202,7 +202,7 @@ int main(int argc, char* argv[]) {
     }
 
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, gl_fbo);
-    glClearColor(0.0, 0.0, 1.0f, 1.0f);
+    glClearColor(0.3, 0.6, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     printf("GL error at initial clear: %d\n", glGetError());
 
@@ -308,18 +308,24 @@ int main(int argc, char* argv[]) {
     glGenVertexArrays(1, &vertex_array);
     glBindVertexArray(vertex_array);
 
-    GLuint vertex_buffer = 0;
-    glGenBuffers(1, &vertex_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+    //GLuint vertex_buffer = 0;
+    //glGenBuffers(1, &vertex_buffer);
+    //glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
     GLfloat quad[] = {-1.f, -1.f,
                        1.f, -1.f,
                       -1.f,  1.f,
                        1.f,  1.f};
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
-    printf("glBufferData: %d\n", glGetError());
+    //glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
+    //printf("glBufferData: %d\n", glGetError());
 
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 2, NULL);
     printf("glVertexAttribPointer: %d\n", glGetError());
+
+    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, gl_texture);
+    printf("glBindTexture: %d\n", glGetError());
+    glBindVertexArray(vertex_array);
+
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     printf("glDrawArrays: %d\n", glGetError());
@@ -327,11 +333,13 @@ int main(int argc, char* argv[]) {
     glReadPixels(0, 0, px_width, px_height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
     printf("glReadPixels: %d\n", glGetError());
 
+    glFlush();
+
 
     for (int y = 0; y < 10; ++y) {
       for (int x = 0; x < 10; ++x) {
         const int pixel_index = y * stride + x * 4;
-        printf("0x%x 0x%x 0x%x 0x%x-", pixels[pixel_index], pixels[pixel_index+1],
+        printf("0x%x 0x%x 0x%x 0x%x-\n", pixels[pixel_index], pixels[pixel_index+1],
           pixels[pixel_index+2], pixels[pixel_index+3]);
         //assert(pixels[pixel_index] == color[0]);
         //assert(pixels[pixel_index + 1] == color[1]);
