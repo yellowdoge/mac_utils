@@ -79,7 +79,8 @@ void DrawToIOSurface() {
     return;
   glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[activeFramebuffer]);
 
-  glClearColor(activeFramebuffer ? 0.0 : 0.0, 1.0f, 0.0f, 1.0f /* A ignored */);
+  // We can use here |activeFramebuffer| to do fancy colours effects.
+  glClearColor(1.0f, 0.0f, 0.0f, 1.0f /* A ignored */);
 
   // Just clearing the fb.
   glClear(GL_COLOR_BUFFER_BIT);
