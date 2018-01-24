@@ -122,7 +122,7 @@ int main(int argc, char* argv[]) {
   CGLError cgl_error = CGLTexImageIOSurface2D(
       CGLGetCurrentContext(),
       GL_TEXTURE_RECTANGLE_ARB,
-      GL_RGBA,
+      GL_RGB10_A2,
       px_width,
       px_height,
       GL_BGRA,

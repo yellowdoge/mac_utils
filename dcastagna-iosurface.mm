@@ -52,9 +52,15 @@ void CreateCGLContext() {
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_RECTANGLE_ARB, texture);
     err =
-      CGLTexImageIOSurface2D(context, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA,
-			     IOSurfaceGetWidth(io_surfaces[i]), IOSurfaceGetHeight(io_surfaces[i]),
-			     GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, io_surfaces[i], 0);
+      CGLTexImageIOSurface2D(context,
+      	  GL_TEXTURE_RECTANGLE_ARB,
+      	  GL_RGB10_A2,
+			    IOSurfaceGetWidth(io_surfaces[i]),
+			    IOSurfaceGetHeight(io_surfaces[i]),
+			    GL_BGRA,
+			    GL_UNSIGNED_INT_2_10_10_10_REV,
+			    io_surfaces[i],
+			    0);
     if (err != kCGLNoError) {
       printf("Error in CGLTexImageIOSurface2D: %s\n", CGLErrorString(err));
     }
@@ -73,7 +79,7 @@ void DrawToIOSurface() {
     return;
   glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[activeFramebuffer]);
 
-  glClearColor(activeFramebuffer ? 1.0 : 0.0, 0.5f, 0.5f, 1.0f);
+  glClearColor(activeFramebuffer ? 0.0 : 0.0, 1.0f, 0.0f, 1.0f /* A ignored */);
 
   // Just clearing the fb.
   glClear(GL_COLOR_BUFFER_BIT);
@@ -111,7 +117,7 @@ int main(int argc, char* argv[]) {
   [window makeKeyAndOrderFront:nil];
 
   // Create IOSurface
-  unsigned pixelFormat = 'BGRA';
+  unsigned pixelFormat = 'R10k';
   NSDictionary *options = @{
     (id)kIOSurfaceWidth: @(1024),
     (id)kIOSurfaceHeight: @(768),
