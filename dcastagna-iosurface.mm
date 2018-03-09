@@ -80,7 +80,7 @@ void DrawToIOSurface() {
   glBindFramebuffer(GL_FRAMEBUFFER, framebuffers[activeFramebuffer]);
 
   // We can use here |activeFramebuffer| to do fancy colours effects.
-  glClearColor(1.0f, 0.0f, 0.0f, 1.0f /* A ignored */);
+  glClearColor(0.0f, 0.0f, 1.0f, 1.0f /* A ignored */);
 
   // Just clearing the fb.
   glClear(GL_COLOR_BUFFER_BIT);
@@ -118,7 +118,7 @@ int main(int argc, char* argv[]) {
   [window makeKeyAndOrderFront:nil];
 
   // Create IOSurface
-  unsigned pixelFormat = 'R10k';
+  unsigned pixelFormat = 'l10r';//'R10k';
   NSDictionary *options = @{
     (id)kIOSurfaceWidth: @(1024),
     (id)kIOSurfaceHeight: @(768),
